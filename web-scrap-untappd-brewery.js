@@ -1,20 +1,23 @@
 const puppeteer = require('puppeteer');
 
 (async () => {
+	console.log('Run headless browser...');
 	const browser = await puppeteer.launch();
 	const page = await browser.newPage();
 
 	//link to list of breweires on untappd website
+	console.log('Finding url...');
 	const URL = 'https://untappd.com/brewery/top_rated?country=poland';
 
 	await page.goto(URL);
-
+	console.log('Collecting links...');
 	//scrap links to separate breweries
 	const breweries = await page.evaluate(() =>
 		Array.from(document.querySelectorAll('div.beer-item')).map(
 			(brewery) => brewery.querySelector('div.beer-details p.name a').href
 		)
 	);
+	console.log('Preparing elements to scraping process...');
 	// console.log all links
 	// breweries.map((b) => console.log(b));
 
@@ -28,7 +31,7 @@ const puppeteer = require('puppeteer');
 		});
 		const newItem = await page.evaluate(() =>
 			Array.from(document.querySelectorAll('div.cont')).map((d) => ({
-				id: Math.random().toString(36).substr(2, 9),
+				key: Math.random().toString(36).substr(2, 9),
 				scrapFrom: 'untappd',
 				name: d.querySelector(' div.top div.basic div.name h1')
 					.innerText,
@@ -66,19 +69,25 @@ const puppeteer = require('puppeteer');
 
 		//check on progress
 		console.log(
-			'passed',
+			'Elements passed:',
 			i + 1,
 			'out of',
 			breweries.length,
-			'     ',
-			i * 2,
+			' | ',
+			'Progress:',
+			((parseInt(i) / parseInt(breweries.length - 1)) * 100).toFixed(1),
 			'/',
-			breweries.length * 2,
+			100,
 			'%'
 		);
-		//add sraped data to the dataset
+		//add scraped data to the dataset
 		data.push(newItem);
 	}
-	console.log(data);
+	console.log('Data successfully collected.');
+	setTimeout(function () {
+		console.log(data);
+	}, 3000);
+
+	// data.map((brewery) => console.log(brewery));
 	await browser.close();
 })();
